@@ -1,0 +1,21 @@
+# Print Parameters for Nanoscribe 63x IP-Dip
+
+# Slicing and hatching
+slice_distance_um: 0.5
+hatch_distance_um: 0.2
+
+# Voxel model (physical resolution limits)
+voxel_xy_um: 0.5
+voxel_z_um: 1.3
+
+# GWL writing parameters
+power_scaling: 0.6
+laser_power: 40
+scan_speed: 100
+wait_time: 0.1
+
+# Stage positioning
+find_interface_at: 0
+x_offset: 0
+y_offset: 0
+z_offset: 0

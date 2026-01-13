@@ -1,0 +1,7 @@
+Base- Create a 10x10 array of solid cylindrical posts. Each cylinder is 8 um tall and 3 um in diameter. The cylinders are arranged in a square grid with 12 um center-to-center spacing. All cylinders should be fully solid and identical.
+
+Undergrad- Generate a 10x10 array of triangular pyramids. The base meta atom should have a square base of 10um, and height of 20um. The spacing should be 20um from edge to edge of each pyramid. The rows should be offset, so every other row is 5um offset to the right from the first, but the next row is normal.
+
+Grad- Create an array of nailhead-style structures. Each structure consists of two stacked cylinders: a base cylinder that is 6 um tall and 3 um in diameter, and a top cylinder centered on the base that is 2 um tall and 6 um in diameter. The structures are arranged in a square array with 15 um center-to-center spacing. The intent is that top-down sputtering primarily coats the top cylinder while shadowing the base.
+
+Postdoc- Create a 5x5 array of lattice meta-atoms. Each lattice meta-atom consists of a 3D lattice of small cubes arranged in a 10x10x10 grid, forming an overall meta-atom size of 100 um x 100 um x 100 um. Each small cube in the lattice is 10 um on a side. The lattice meta-atoms are arranged with 150 um center-to-center spacing between neighboring meta-atoms. This design is intended for ALD Al2O3 coating followed by nanoindentation testing.

@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Output directories
+Outputs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Environment files
+.env
+venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
