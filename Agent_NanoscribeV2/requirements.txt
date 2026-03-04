@@ -1,0 +1,16 @@
+# Requirements for Nanoscribe Design Agent V2
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+openai>=1.0.0
+langgraph>=0.3.0
+langchain-core>=0.3.0
+
+# Visualization
+matplotlib>=3.5.0
+numpy>=1.21.0
+pillow>=9.0.0
+
+# Jupyter support (optional)
+jupyter>=1.0.0
+ipython>=8.0.0

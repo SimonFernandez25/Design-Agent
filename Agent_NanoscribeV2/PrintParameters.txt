@@ -1,0 +1,60 @@
+# Print Parameters for Nanoscribe 63x IP-Dip
+# These parameters control the fabrication process
+
+# ==============================================================================
+# SLICING AND HATCHING
+# ==============================================================================
+# slice_distance_um: Vertical distance between Z layers
+#   - Smaller = higher resolution but longer print time
+#   - Typical range: 0.3 - 1.0 um
+slice_distance_um: 0.5
+
+# hatch_distance_um: Horizontal distance between scan lines within each layer
+#   - Smaller = denser fill but longer print time
+#   - Typical range: 0.1 - 0.5 um
+hatch_distance_um: 0.2
+
+# ==============================================================================
+# VOXEL MODEL (Physical Resolution Limits)
+# ==============================================================================
+# voxel_xy_um: Lateral (XY) voxel dimension
+#   - Determined by laser spot size and NA of objective
+#   - 63x objective with IP-Dip: ~0.16 um
+voxel_xy_um: 0.16
+
+# voxel_z_um: Axial (Z) voxel dimension
+#   - Typically larger than XY due to point spread function
+#   - For visualization/consolidation tolerance
+voxel_z_um: 0.16
+
+# ==============================================================================
+# GWL WRITING PARAMETERS
+# ==============================================================================
+# power_scaling: Multiplier for laser power (0.0 - 1.0)
+#   - Lower = less exposure, may cause incomplete polymerization
+#   - Higher = more exposure, may cause overexposure/burning
+power_scaling: 0.6
+
+# laser_power: Base laser power setting (percentage)
+#   - Combined with power_scaling for final power
+laser_power: 40
+
+# scan_speed: Galvo scan speed in um/s
+#   - Faster = shorter print time but less exposure
+#   - Typical range: 50 - 200 um/s
+scan_speed: 100
+
+# wait_time: Stabilization delay between moves (seconds)
+wait_time: 0.1
+
+# ==============================================================================
+# STAGE POSITIONING
+# ==============================================================================
+# find_interface_at: Z position for glass/resist interface detection
+find_interface_at: 0
+
+# x_offset, y_offset, z_offset: Stage offset values
+#   - Used to position the print within the stage coordinate system
+x_offset: 0
+y_offset: 0
+z_offset: 0

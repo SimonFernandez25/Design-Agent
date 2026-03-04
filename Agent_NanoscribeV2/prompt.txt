@@ -1,0 +1,4 @@
+# Active Prompt for Named Object Agent
+# Copy one line from prompt_examples.txt here
+
+Grad- Create an array of nailhead-style structures. Each structure consists of two stacked cylinders: a base cylinder that is 6 um tall and 3 um in diameter, and a top cylinder centered on the base that is 2 um tall and 6 um in diameter. Arranged in a 10x10 square array with 15 um spacing.

@@ -1,0 +1,115 @@
+# Example Prompts for Named Object Agent (V2)
+# Each prompt demonstrates a different type of structure
+# Format: Category- Prompt text
+
+# ==============================================================================
+# BASE - Simple Post Array
+# ==============================================================================
+# Expected output: 1 geometry object (post), grid assembly
+Base- Create a 10x10 array of solid cylindrical posts. Each cylinder is 8 um tall and 3 um in diameter. The cylinders are arranged in a square grid with 12 um center-to-center spacing.
+
+# Expected V2 output structure:
+# {
+#   "job_name": "cylindrical_post_array",
+#   "objects": {
+#     "post": {
+#       "type": "geometry",
+#       "components": [
+#         {"type": "cylinder", "center": [0, 0, 4], "dimensions": {"diameter_um": 3, "height_um": 8}}
+#       ]
+#     }
+#   },
+#   "assembly": {
+#     "type": "grid",
+#     "grid": {"x": 10, "y": 10},
+#     "spacing_um": {"x": 12, "y": 12},
+#     "default_object": "post"
+#   }
+# }
+
+# ==============================================================================
+# UNDERGRAD - Derived Primitives (Pyramid)
+# ==============================================================================
+# Expected output: 1 geometry object with pyramid + construction metadata
+Undergrad- Generate a 10x10 array of triangular pyramids. Base is 10um square, height is 20um. Spacing is 20um edge-to-edge. Every other row is offset 5um to the right.
+
+# Expected V2 output structure:
+# {
+#   "job_name": "staggered_pyramid_array",
+#   "objects": {
+#     "pyramid_unit": {
+#       "type": "geometry",
+#       "components": [
+#         {
+#           "type": "pyramid", 
+#           "center": [0, 0, 10], 
+#           "dimensions": {"base_width_um": 10, "height_um": 20},
+#           "construction": {"method": "stacked_boxes", "layers": 20}
+#         }
+#       ]
+#     }
+#   },
+#   "assembly": {
+#     "type": "grid",
+#     "grid": {"x": 10, "y": 10},
+#     "spacing_um": {"x": 30, "y": 30},
+#     "default_object": "pyramid_unit"
+#   }
+# }
+
+# ==============================================================================
+# GRAD - Stacked Structures (Nailhead)
+# ==============================================================================
+# Expected output: 1 geometry object with multiple primitives
+Grad- Create an array of nailhead-style structures. Each structure consists of two stacked cylinders: a base cylinder that is 6 um tall and 3 um in diameter, and a top cylinder centered on the base that is 2 um tall and 6 um in diameter. Arranged in a 10x10 square array with 15 um spacing.
+
+# Expected V2 output structure:
+# {
+#   "job_name": "nailhead_array",
+#   "objects": {
+#     "nailhead": {
+#       "type": "geometry",
+#       "components": [
+#         {"type": "cylinder", "center": [0, 0, 3], "dimensions": {"diameter_um": 3, "height_um": 6}},
+#         {"type": "cylinder", "center": [0, 0, 7], "dimensions": {"diameter_um": 6, "height_um": 2}}
+#       ]
+#     }
+#   },
+#   "assembly": {
+#     "type": "grid",
+#     "grid": {"x": 10, "y": 10},
+#     "spacing_um": {"x": 15, "y": 15},
+#     "default_object": "nailhead"
+#   }
+# }
+
+# ==============================================================================
+# POSTDOC - Composite Objects (Lattice Meta-Atom)
+# ==============================================================================
+# Expected output: geometry object + composite object + assembly
+Postdoc- Create a 3x3 array of lattice meta-atoms. Each meta-atom consists of a 3x3x3 cubic lattice of small cylindrical posts (2um diameter, 5um tall each, spaced 8um apart). The meta-atoms are arranged with 50um center-to-center spacing.
+
+# Expected V2 output structure:
+# {
+#   "job_name": "lattice_meta_atom_array",
+#   "objects": {
+#     "post": {
+#       "type": "geometry",
+#       "components": [
+#         {"type": "cylinder", "center": [0, 0, 2.5], "dimensions": {"diameter_um": 2, "height_um": 5}}
+#       ]
+#     },
+#     "meta_atom": {
+#       "type": "composite",
+#       "uses": "post",
+#       "repeat": {"x": 3, "y": 3, "z": 3},
+#       "spacing_um": {"x": 8, "y": 8, "z": 8}
+#     }
+#   },
+#   "assembly": {
+#     "type": "grid",
+#     "grid": {"x": 3, "y": 3},
+#     "spacing_um": {"x": 50, "y": 50},
+#     "default_object": "meta_atom"
+#   }
+# }
