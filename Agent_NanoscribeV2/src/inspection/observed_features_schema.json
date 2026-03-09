@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Schema for inspection/observed_features.json — produced by the deterministic segmentation pipeline (Render_to_SEM). This file is READ by the SEM analysis module. It must be placed at <iter_folder>/inspection/observed_features.json before running run_sem_analysis.py.",
+
+  "type": "object",
+  "required": ["objects_detected", "holes_detected", "shape_descriptors"],
+  "additionalProperties": true,
+
+  "properties": {
+    "objects_detected": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of solid objects segmented from the top-down SEM image."
+    },
+    "holes_detected": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of void / hole features detected."
+    },
+    "shape_descriptors": {
+      "type": "object",
+      "required": ["area", "convexity", "circularity"],
+      "additionalProperties": true,
+      "properties": {
+        "area": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total segmented foreground area in pixels."
+        },
+        "convexity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Ratio of segmented area to convex hull area. 1.0 = perfectly convex."
+        },
+        "circularity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "4π × area / perimeter². 1.0 = perfect circle."
+        }
+      }
+    },
+
+    "per_object": {
+      "type": "array",
+      "description": "OPTIONAL. Per-object descriptors if the segmentation pipeline supports instance segmentation.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "object_index": {"type": "integer"},
+          "area":         {"type": "number", "minimum": 0},
+          "convexity":    {"type": "number", "minimum": 0, "maximum": 1},
+          "circularity":  {"type": "number", "minimum": 0, "maximum": 1},
+          "centroid_px":  {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    }
+  },
+
+  "examples": [
+    {
+      "objects_detected": 25,
+      "holes_detected": 0,
+      "shape_descriptors": {
+        "area": 4120,
+        "convexity": 0.73,
+        "circularity": 0.41
+      }
+    },
+    {
+      "objects_detected": 1,
+      "holes_detected": 1,
+      "shape_descriptors": {
+        "area": 8500,
+        "convexity": 0.95,
+        "circularity": 0.88
+      },
+      "per_object": [
+        {
+          "object_index": 0,
+          "area": 8500,
+          "convexity": 0.95,
+          "circularity": 0.88,
+          "centroid_px": [256, 256]
+        }
+      ]
+    }
+  ]
+}
