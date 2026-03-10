@@ -441,9 +441,11 @@ def _show_render_images(iter_dir: Path):
 
 def _parse_redesign_prompt(prompt: str, design_json: Dict) -> Optional[Dict]:
     import re
+
     edits: Dict = {}
     objects  = design_json.get("objects", {})
     assembly = design_json.get("assembly", {})
+    prompt_l = prompt.lower()
 
     dim_kw = {
         "width": "base_width_um", "base_width": "base_width_um",
@@ -452,6 +454,43 @@ def _parse_redesign_prompt(prompt: str, design_json: Dict) -> Optional[Dict]:
         "x_um": "x_um", "y_um": "y_um", "z_um": "z_um",
         "top_width": "top_width_um", "top_diameter": "top_diameter_um",
     }
+
+    def _component_height(comp: Dict) -> Optional[float]:
+        d = comp.get("dimensions", {})
+        h = d.get("height_um", d.get("z_um"))
+        if isinstance(h, (int, float)):
+            return float(h)
+        return None
+
+    def _stack_touch_edits(obj_name: str, comps: List[Dict], target_total_height: Optional[float] = None):
+        if len(comps) < 2:
+            return
+
+        stack = []
+        for i, comp in enumerate(comps):
+            center = comp.get("center", [])
+            h = _component_height(comp)
+            if len(center) < 3 or h is None:
+                return
+            stack.append((i, float(center[2]), h))
+
+        stack.sort(key=lambda t: t[1])
+        idxs = [t[0] for t in stack]
+        heights = [t[2] for t in stack]
+
+        min_z = min(cz - h / 2.0 for _, cz, h in stack)
+
+        if target_total_height is not None:
+            fixed_sum = sum(heights[:-1])
+            heights[-1] = max(0.01, float(target_total_height) - fixed_sum)
+            top_idx = idxs[-1]
+            edits[f"objects.{obj_name}.components.{top_idx}.dimensions.height_um"] = round(heights[-1], 6)
+
+        running = min_z
+        for idx, h in zip(idxs, heights):
+            new_cz = running + h / 2.0
+            edits[f"objects.{obj_name}.components.{idx}.center.2"] = round(new_cz, 6)
+            running += h
 
     set_pat = re.compile(
         r"(?:set|change|make|increase|decrease|reduce|adjust)\s+"
@@ -465,16 +504,16 @@ def _parse_redesign_prompt(prompt: str, design_json: Dict) -> Optional[Dict]:
             for oname, odef in objects.items():
                 if odef.get("type") != "geometry":
                     continue
-                for comp in odef.get("components", []):
+                for i, comp in enumerate(odef.get("components", [])):
                     if dk in comp.get("dimensions", {}):
-                        edits[f"objects.{oname}.components.0.dimensions.{dk}"] = val
+                        edits[f"objects.{oname}.components.{i}.dimensions.{dk}"] = val
                         break
                     if dk in comp.get("construction", {}):
-                        edits[f"objects.{oname}.components.0.construction.{dk}"] = val
+                        edits[f"objects.{oname}.components.{i}.construction.{dk}"] = val
                         break
 
     arr_pat = re.compile(r"(\d+)\s*(?:x|by)\s*(\d+)\s*(?:array|grid)?", re.IGNORECASE)
-    for m in arr_pat.finditer(prompt.lower()):
+    for m in arr_pat.finditer(prompt_l):
         nx, ny = int(m.group(1)), int(m.group(2))
         if "grid" in assembly:
             edits["assembly.grid.x"] = nx
@@ -492,11 +531,11 @@ def _parse_redesign_prompt(prompt: str, design_json: Dict) -> Optional[Dict]:
             for oname, odef in objects.items():
                 if odef.get("type") != "geometry":
                     continue
-                for comp in odef.get("components", []):
+                for i, comp in enumerate(odef.get("components", [])):
                     cur = comp.get("dimensions", {}).get(dk)
                     if cur is not None:
                         nv = cur + val if action == "increase" else cur - val
-                        edits[f"objects.{oname}.components.0.dimensions.{dk}"] = round(nv, 6)
+                        edits[f"objects.{oname}.components.{i}.dimensions.{dk}"] = round(nv, 6)
                         break
 
     layer_pat = re.compile(r"(\d+)\s+layers", re.IGNORECASE)
@@ -505,9 +544,25 @@ def _parse_redesign_prompt(prompt: str, design_json: Dict) -> Optional[Dict]:
         for oname, odef in objects.items():
             if odef.get("type") != "geometry":
                 continue
-            for comp in odef.get("components", []):
+            for i, comp in enumerate(odef.get("components", [])):
                 if "construction" in comp and "layers" in comp["construction"]:
-                    edits[f"objects.{oname}.components.0.construction.layers"] = nl
+                    edits[f"objects.{oname}.components.{i}.construction.layers"] = nl
+
+    total_h_pat = re.compile(
+        r"(?:total|overall)\s+height(?:\s+of\s+(?:the\s+)?object)?\s*(?:to|=)?\s*([\d.]+)",
+        re.IGNORECASE,
+    )
+    m_total = total_h_pat.search(prompt)
+    if m_total:
+        target_h = float(m_total.group(1))
+        for oname, odef in objects.items():
+            if odef.get("type") == "geometry":
+                _stack_touch_edits(oname, odef.get("components", []), target_total_height=target_h)
+
+    if any(w in prompt_l for w in ("touch", "touching", "no gap", "flush", "stacked")):
+        for oname, odef in objects.items():
+            if odef.get("type") == "geometry":
+                _stack_touch_edits(oname, odef.get("components", []), target_total_height=None)
 
     return edits or None
 
@@ -1126,9 +1181,9 @@ def main():
                     for k, v in job.metrics_history[-1].items():
                         if k == "delta":
                             continue
+                        val_text = f"{v:.4f}" if isinstance(v, float) else str(v)
                         st.text(f"  {k.replace('_',' ')}: "
-                                f"{v:.4f if isinstance(v,float) else v}")
-
+                                f"{val_text}")
             if st.session_state.prompt_history:
                 with st.expander("History"):
                     for tag, txt in reversed(st.session_state.prompt_history):

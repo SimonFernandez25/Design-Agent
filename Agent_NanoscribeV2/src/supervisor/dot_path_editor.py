@@ -33,41 +33,52 @@ def _traverse(root: dict, parts: List[str]) -> Tuple[Any, str]:
     Walk *root* following *parts[:-1]* and return
     (parent_container, last_key) so the caller can assign into it.
 
+    Supports dict keys and list indices while traversing.
+
     Raises
     ------
     KeyError
-        If any intermediate key does not exist.
+        If any intermediate key/index does not exist.
     TypeError
-        If an intermediate node is not a dict (cannot traverse into it).
+        If an intermediate node is not indexable.
     """
     node: Any = root
     for part in parts[:-1]:
-        if not isinstance(node, dict):
-            raise TypeError(
-                f"Cannot traverse into non-dict node at key '{part}'. "
-                f"Node type: {type(node).__name__}"
-            )
-        if part not in node:
-            raise KeyError(
-                f"Key '{part}' not found. "
-                f"Available keys: {list(node.keys())}"
-            )
-        node = node[part]
+        if isinstance(node, dict):
+            if part not in node:
+                raise KeyError(
+                    f"Key '{part}' not found. "
+                    f"Available keys: {list(node.keys())}"
+                )
+            node = node[part]
+            continue
 
-    # Final container must be a dict
-    if not isinstance(node, dict):
+        if isinstance(node, list):
+            if not part.isdigit():
+                raise KeyError(
+                    f"Expected list index, got '{part}'. "
+                    f"Valid indices: 0..{max(0, len(node)-1)}"
+                )
+            idx = int(part)
+            if idx < 0 or idx >= len(node):
+                raise KeyError(
+                    f"List index '{idx}' out of range. "
+                    f"Valid indices: 0..{max(0, len(node)-1)}"
+                )
+            node = node[idx]
+            continue
+
         raise TypeError(
-            f"Parent of target key is not a dict (type: {type(node).__name__})"
+            f"Cannot traverse into node at key '{part}'. "
+            f"Node type: {type(node).__name__}"
         )
 
-    last_key = parts[-1]
-    if last_key not in node:
-        raise KeyError(
-            f"Target key '{last_key}' not found. "
-            f"Available keys: {list(node.keys())}"
+    if not isinstance(node, (dict, list)):
+        raise TypeError(
+            f"Parent of target key is not indexable (type: {type(node).__name__})"
         )
 
-    return node, last_key
+    return node, parts[-1]
 
 
 def _check_type_compatibility(existing: Any, new_value: Any, path: str) -> None:
@@ -172,12 +183,39 @@ def apply_dot_path_edits(
                 f"Cannot traverse path '{path}': {exc}"
             ) from exc
 
-        existing_value = parent[key]
+        if isinstance(parent, dict):
+            if key not in parent:
+                raise KeyError(
+                    f"Invalid path '{path}': "
+                    f"Target key '{key}' not found. "
+                    f"Available keys: {list(parent.keys())}"
+                )
+            existing_value = parent[key]
+        elif isinstance(parent, list):
+            if not key.isdigit():
+                raise KeyError(
+                    f"Invalid path '{path}': expected list index at final segment, got '{key}'."
+                )
+            idx = int(key)
+            if idx < 0 or idx >= len(parent):
+                raise KeyError(
+                    f"Invalid path '{path}': list index '{idx}' out of range "
+                    f"(0..{max(0, len(parent)-1)})."
+                )
+            existing_value = parent[idx]
+        else:
+            raise TypeError(
+                f"Invalid path '{path}': parent is not indexable "
+                f"(type: {type(parent).__name__})."
+            )
 
         if strict:
             _check_type_compatibility(existing_value, new_value, path)
 
-        parent[key] = new_value
+        if isinstance(parent, dict):
+            parent[key] = new_value
+        else:
+            parent[idx] = new_value
 
         change_log.append(
             f"EDIT | {path}: {existing_value!r} -> {new_value!r}"
